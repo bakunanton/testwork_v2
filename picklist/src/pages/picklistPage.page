@@ -1,0 +1,88 @@
+<apex:page showHeader="false" sidebar="false" controller="pickList" applyHtmlTag="true">
+	<head>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous"></link>
+	<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+	<!-- Latest compiled and minified JavaScript -->
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.6/angular.min.js"></script>
+	</head>
+	<body ng-app="pageListApp" ng-controller="pickListCtrl">
+	<div class="row">
+	<form class="form-horizontal">
+	<fieldset>
+	<!-- Form Name -->
+	<div calss = "row">
+		<div class="col-md-1"></div>
+		<div class="col-md-10 alert alert-info" role="alert"><h2 align="center">SObject Table</h2></div>
+		<div class="col-md-1"></div>
+	</div>
+	<!-- Select Basic -->
+	<div class="form-group" >
+  	<label class="col-md-4 control-label" for="selectbasic">Select Type Object</label>
+  	<div class="col-md-4">
+    	<select  name="selectbasic" ng-model = "selectedType"  class="form-control"  ng-change ="getAllObjects(selectedType)">
+    		<option ng-repeat="typ in typs">{{typ}}</option>
+    	</select>
+  	</div>
+  	</div>
+  	<div class="form-group" ng-hide = "!selectedType">
+  	<label class="col-md-4 control-label" for="selectbasic">Select Object</label>
+  		<div class="col-md-4 control-label">
+  			<select  name="selectbasic" ng-model = "selectedObject" class="form-control"  ng-change ="getAllFieldApiName(selectedObject)">
+      			<option ng-repeat="obj in objects" >{{obj}}</option>
+    		</select>
+  		</div>
+	</div>
+	</fieldset>
+	</form>
+	<div class="container-fluid" ng-hide = "!selectedObject">
+  <h2>Object field</h2>
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th class = "primary" ng-repeat="(key,value) in objectsName[0]" >{{key}}</th> 
+      </tr>
+    </thead>
+    <tbody>
+      <tr ng-repeat="(key,value) in objectsName">
+        <td ng-repeat="(key,value) in objectsName[$index]">{{value}}</td>
+      </tr>   
+    </tbody>
+  </table>
+</div>
+	</div>	
+<script type="text/javascript">
+var app = angular.module("pageListApp", []);
+app.controller("pickListCtrl", ["$scope", function ($scope) {
+	$scope.typs = ["Custom", "Standart"];
+	$scope.objects = [];
+	$scope.objectsName=[];
+	$scope.selectedField=[];
+	
+$scope.getAllObjects = function (selectedType) {
+    var typeObj;
+    if (angular.equals(selectedType, "Custom") == true) {
+        typeObj = true;
+    }
+    else {
+        typeObj = false;
+    }
+    console.log(typeObj);
+    Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.pickList.getAllObjects}', typeObj, function (result, event) {
+        console.log(result);
+        $scope.objects = JSON.parse(result);
+        $scope.$apply();
+    }, { escape: false});
+}
+$scope.getAllFieldApiName = function (selectedObject) {
+    Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.pickList.getAllFields}', selectedObject, function (result, event) {
+        $scope.objectsName = JSON.parse(result);
+        console.log($scope.objectsName);
+        $scope.$apply($scope.objectsName);
+    }, { escape: false});
+}
+}]);
+</script>
+</body>
+</apex:page>
